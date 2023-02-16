@@ -9,6 +9,7 @@ an exercise in a mechatronics course.
 """
 
 import micropython
+import pyb
 
 
 ## The register address of the STATUS register in the MMA845x
@@ -84,7 +85,7 @@ class MMA845x:
     The example code works for an MMA8452 on a SparkFun<sup>TM</sup> breakout
     board. """
 
-    def __init__ (self, i2c, address, accel_range = 0):
+    def __init__ (self, i2c, address, accel_range):
         """! Initialize an MMA845x driver on the given I<sup>2</sup>C bus. The 
         I<sup>2</sup>C bus object must have already been initialized, as we're
         going to use it to get the accelerometer's WHO_AM_I code right away. 
@@ -94,7 +95,9 @@ class MMA845x:
         @param accel_range The range of accelerations to measure; it must be
             either @c RANGE_2g, @c RANGE_4g, or @c RANGE_8g (default: 2g)
         """
-
+        #initilize empty queue
+        
+        self.queue = []
         ## The I2C driver which was created by the code which called this
         self.i2c = i2c
 
@@ -137,18 +140,20 @@ class MMA845x:
         be made, one must call @c active(). """
 
         if self._works:
-            reg1 = ord (self._i2c.mem_read (1, self._addr, CTRL_REG1))
+            reg1 = ord (self.i2c.mem_read (1, self.addr, CTRL_REG1))
             reg1 &= ~0x01
-            self._i2c.mem_write (chr (reg1 & 0xFF), self._addr, CTRL_REG1)
+            self.i2c.mem_write (chr (reg1 & 0xFF), self.addr, CTRL_REG1)
 
 
     def get_ax_bits (self):
         """! Get the X acceleration from the accelerometer in A/D bits and 
         return it.
         @return The measured X acceleration in A/D conversion bits """
-
-        print ('MMA845x clueless about X acceleration')
-        return 0
+        if self._works:
+            accel = self.i2c.mem_read(2, self.addr, OUT_X_MSB)
+            accel = int.from_bytes(accel, 'big')
+            self.queue.append(accel)
+        return self.queue
 
 
     def get_ay_bits (self):
