@@ -2,9 +2,10 @@
 @file mma845x.py
 This file contains a @b partly @b written MicroPython driver for the MMA8451 
 and MMA8452 accelerometers. It is intended to be used as a starting point for
-an exercise in a mechatronics course. 
+an exercise in a mechatronics course. Currently have the Get_ax function written
+for the microlab. 
 
-@author JR Ridgely
+@author JR Ridgely and MECHE-07
 @copyright GPL Version 3.0
 """
 
@@ -150,10 +151,9 @@ class MMA845x:
         return it.
         @return The measured X acceleration in A/D conversion bits """
         if self._works:
-            accel = self.i2c.mem_read(2, self.addr, OUT_X_MSB)
-            accel = int.from_bytes(accel, 'big')
-            self.queue.append(accel)
-        return self.queue
+            accel = self.i2c.mem_read(2, self.addr, OUT_X_MSB) #read from the MSB
+            accel = int.from_bytes(accel, 'big',True) #signed True, Big byte order and read from accel
+        return accel #return accel 
 
 
     def get_ay_bits (self):
